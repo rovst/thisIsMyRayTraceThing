@@ -1,7 +1,8 @@
+
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <math.h>
-#include <stdbool.h>  // For bool
+#include <stdbool.h>
 
 struct Circle {
     int x;
@@ -9,15 +10,13 @@ struct Circle {
     int r;
 };
 
-
-struct ray{
-    double startY;
-    double angle;
+struct ray {
     double startX;
+    double startY;
     double endX;
     double endY;
+    double angle;
 };
-
 
 void FillCircle(SDL_Surface* surface, struct Circle circle, Uint32 color) {
     int x_start = circle.x - circle.r;
@@ -29,27 +28,36 @@ void FillCircle(SDL_Surface* surface, struct Circle circle, Uint32 color) {
 
     for (int x = x_start; x <= x_end; x++) {
         for (int y = y_start; y <= y_end; y++) {
-            int dx = x - circle.x;
-            int dy = y - circle.y;
-            int distance_squared = dx * dx + dy * dy;
 
             if (distance_squared <= radius_squared) {
-                SDL_Rect pixel = { x, y, 1, 1 };
+                SDL_Rect pixel = { x_draw, y_draw, 1, 1 };
                 SDL_FillRect(surface, &pixel, color);
+
             }
         }
     }
 }
 
-void emmit_Ray(struct Circle circle, struct ray rayarr[100]){
+void emmit_rays(struct Circle circle, struct ray rays[100]) {
+    for (int i = 0; i < 100; i++) {
+        double angle = ((double)i / 100) * 2 * M_PI;
 
-    for(int i=1; i<=100;i++){
-        double angle=(i/100.0)*360.0;
-        rayarr[i].angle=angle;
-        printf("%f\n", angle);
+        printf("Ray %d: angle=%.2f end=(%.2f, %.2f)\n", i, angle, endX, endY);
     }
 }
 
+
+void FillRays(SDL_Surface* surface, struct Ray rays[100], Uint32 color){
+    for(int i=0; i<100; i++){
+        struct Ray ray=rays[i];
+        int end_of_screen=0;
+        int object_hit=0;
+            while(end_of_screen && !object_hit)//and{
+            double x_draw=ray.x_start +i*cos(ray.angle);
+            double y_draw=ray.y_start +i*cos(ray.angle);
+
+        if(x_draw <0||
+}}
 int main() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
@@ -57,10 +65,10 @@ int main() {
     }
 
     SDL_Window *window = SDL_CreateWindow(
-        "this is my raytrace thing", 
-        SDL_WINDOWPOS_CENTERED, 
-        SDL_WINDOWPOS_CENTERED, 
-        900, 700, 
+        "Raytracer",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        900, 700,
         0);
 
     if (!window) {
@@ -80,12 +88,11 @@ int main() {
     bool running = true;
     SDL_Event event;
 
-    // Define the circle
     struct Circle circle = { 200, 200, 80 };
     struct Circle shadow_circle = { 200, 20, 200 };
 
     struct ray rays[100];
-    emmit_Ray(circle, rays);
+    emmit_rays(circle, rays);
 
     Uint32 white = SDL_MapRGB(surface->format, 255, 255, 255);
     Uint32 black = SDL_MapRGB(surface->format, 0, 0, 0);
@@ -95,19 +102,21 @@ int main() {
             if (event.type == SDL_QUIT) {
                 running = false;
             }
-            if(event.type ==SDL_MOUSEMOTION && event.motion.state !=0){
-                circle.x=event.motion.x;
-                circle.y=event.motion.y;
+            if (event.type == SDL_MOUSEMOTION) {
+                circle.x = event.motion.x;
+                circle.y = event.motion.y;
+                emmit_rays(circle, rays);
             }
-    }
-        //background
+        }
+
         SDL_FillRect(surface, NULL, black);
-        // circle
+
         FillCircle(surface, circle, white);
         FillCircle(surface, shadow_circle, white);
+        Fillrays(surface, rays, 0xff0000);
 
         SDL_UpdateWindowSurface(window);
-        SDL_Delay(16); // frames
+        SDL_Delay(16);
     }
 
     SDL_DestroyWindow(window);
